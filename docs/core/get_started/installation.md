@@ -48,6 +48,29 @@ How many customers placed more than one order this month?
 What are the top 5 products by total revenue?
 ```
 
+## Optional: call the model through the API
+
+If your installed coding-agent CLI does not expose the model you want, Wren
+can call the OpenAI API directly. The API backend defaults to `gpt-4o-mini` and
+uses the same Wren context/query workflow when run inside a Wren project:
+
+```bash
+wren ai auth login
+wren ai use openai --model gpt-4o-mini
+wren ask "What are the top 5 products by total revenue?" --guided
+```
+
+Switch back at any time:
+
+```bash
+wren ai use prompt   # return to the existing external-agent prompt flow
+wren ai use codex    # use the locally authenticated Codex CLI
+```
+
+`wren ai auth login` stores `OPENAI_API_KEY` in `~/.wren/.env`. This API key is
+separate from `codex login`; a ChatGPT/Codex login cannot be reused as an API
+key.
+
 ## What's next
 
 - [Quickstart](./quickstart.md) — walk through a full example with the bundled `jaffle_shop` sample dataset

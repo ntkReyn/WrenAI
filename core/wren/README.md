@@ -125,7 +125,8 @@ flags.
 ```json
 {
   "strict_mode": true,
-  "denied_functions": ["pg_read_file", "dblink", "lo_import"]
+  "denied_functions": ["pg_read_file", "dblink", "lo_import"],
+  "ai": {"provider": "openai", "model": "gpt-4o-mini"}
 }
 ```
 
@@ -133,6 +134,8 @@ flags.
 |-----|---------|-------------|
 | `strict_mode` | `false` | When `true`, every table in a query must be defined in the MDL. Queries referencing undeclared tables are rejected before execution. |
 | `denied_functions` | `[]` | List of function names (case-insensitive) that are forbidden in queries. |
+| `ai.provider` | `prompt` | `prompt` prints for an external agent, `openai` calls the API, and `codex` uses the local CLI login. |
+| `ai.model` | API: `gpt-4o-mini` | Model override used by the selected backend. |
 
 **6. (Optional) Index schema for semantic search** (requires `wrenai[memory]`,
 or `wrenai[memory-onnx]` for a torch-free install):
@@ -184,6 +187,23 @@ Requires `wren context build` to have already run and the `mcp` extra:
 [MCP guide](../../docs/core/guides/mcp.md) and the
 [CLI reference](../../docs/core/reference/cli.md#wren-serve--mcp-server) for
 the full tool/resource list and client wiring.
+
+**9. (Optional) Call an LLM directly** — keep the prompt-only default, or
+switch `wren ask` to OpenAI API / Codex CLI:
+
+```bash
+wren ai use openai --model gpt-4o-mini
+wren ai auth login
+wren ask "top 5 customers by revenue" --guided
+
+# Switch back to the existing external-agent flow or Codex CLI login:
+wren ai use prompt
+wren ai use codex
+```
+
+The OpenAI backend reads `OPENAI_API_KEY` from the environment or
+`~/.wren/.env`. It uses local Wren tools when run inside a Wren project, while
+the Codex backend uses the authentication managed by `codex login`.
 
 ---
 

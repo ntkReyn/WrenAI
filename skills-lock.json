@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "wren": {
+      "source": "Canner/WrenAI",
+      "sourceType": "github",
+      "skillPath": "skills/wren/SKILL.md",
+      "computedHash": "45842e2f9e97b7da17d14b5003cfa4caae9bb53e28815d34dd1bf060af9ff2a7"
+    }
+  }
+}

@@ -293,6 +293,21 @@ Behind the scenes, Claude Code uses the **usage** guide to:
 4. **Execute** (`wren --sql "..."`): run through the Wren engine
 5. **Store** (`wren memory store`): save successful NL-SQL pairs for future recall
 
+### Use OpenAI API instead of the coding-agent CLI
+
+The same project can call an API model directly when your coding-agent CLI does
+not offer the model you need:
+
+```bash
+wren ai auth login
+wren ai use openai --model gpt-4o-mini
+wren ask "Show me the monthly order count trend." --guided
+```
+
+Use `wren ai use prompt` to return to prompt-only mode, or
+`wren ai use codex` to use the existing `codex login` session. These are two
+separate authentication mechanisms: the API backend reads `OPENAI_API_KEY`.
+
 The more you ask, the smarter the system gets. Each stored query improves future recall accuracy.
 
 ---

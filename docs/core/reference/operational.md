@@ -14,8 +14,9 @@ Single-page reference for every path, environment variable, and discovery rule W
 |---|---|---|
 | `~/.wren/profiles.yml` | All connection profiles plus the `active` pointer. Permissions: `0600`. | `wren profile add` |
 | `~/.wren/config.yml` | CLI preferences. Contains `default_project` if set. | `wren context set-profile`, manual edits |
+| `~/.wren/config.json` | Security policy plus selected `wren ask` LLM backend/model. | `wren ai use`, manual edits |
 | `~/.wren/connection_info.json` | Legacy connection fallback (kept for backward compatibility). | Older CLI versions |
-| `~/.wren/.env` | User-global `.env` fallback for `${VAR}` interpolation. | Manual |
+| `~/.wren/.env` | User-global `.env` fallback for `${VAR}` interpolation and `OPENAI_API_KEY`. | `wren ai auth login`, manual |
 
 Override the entire global directory with `WREN_HOME`.
 
@@ -45,7 +46,7 @@ Override the entire global directory with `WREN_HOME`.
 |---|---|---|
 | `WREN_HOME` | Override the global Wren directory. | `~/.wren` |
 | `WREN_PROJECT_HOME` | Skip project walk-up; point directly at a project root. | — (walks up from cwd) |
-| `OPENAI_API_KEY` | Required for memory embeddings and the `add-llms-md.js` doc prebuild. | — |
+| `OPENAI_API_KEY` | Used by the OpenAI `wren ask` backend; also required for memory embeddings and the `add-llms-md.js` doc prebuild. | — |
 | `CLAUDE_SKILLS_DIR` | Override the skill install directory used by `install.sh`. | `~/.claude/skills` |
 | `WREN_SKILLS_BRANCH` | Override the branch when installing skills via the curl script. | `main` |
 

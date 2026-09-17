@@ -520,11 +520,12 @@ python introspect_dlt.py --duckdb-path ./pipeline.duckdb --output-dir ./project
 
 ---
 
-## `wren ask` — Prompt Shaping
+## `wren ask` — Prompt Shaping and LLM Backends
 
-Wrap a natural-language question in one of two bundled templates and print
-the rendered prompt to stdout. **Does not execute any query** — it
-produces a prompt for an agent to consume.
+By default, wrap a natural-language question in one of two bundled templates
+and print the rendered prompt to stdout. This preserves the original workflow
+where an external coding agent consumes the prompt. To run the prompt through
+an LLM directly, select a backend with `wren ai use` (see below).
 
 You must explicitly pick one mode (no default — silently changing a
 default would alter agent behavior across an upgrade).
@@ -546,6 +547,46 @@ to run.
 ```bash
 wren ask "monthly orders trend" --direct
 ```
+
+### `wren ai use <provider>`
+
+Select the backend used by `wren ask`:
+
+```bash
+wren ai use prompt                         # print a prompt (default)
+wren ai use codex                          # use the locally logged-in Codex CLI
+wren ai use openai --model gpt-4o-mini     # call the OpenAI API
+wren ai status
+```
+
+The OpenAI backend uses the Chat Completions API and defaults to
+`gpt-4o-mini`. When run inside a Wren project, it exposes local Wren tools for
+context, memory, SQL planning, query execution, and storing confirmed
+NL-to-SQL pairs. Override a selection for one invocation with
+`--provider`, `--model`, `--base-url`, or `--path`:
+
+```bash
+wren ask "top 5 customers by revenue" --guided \
+  --provider openai --model gpt-4o-mini
+```
+
+In API mode, the selected OpenAI endpoint receives the prompt, Wren context,
+and any query results needed to form the answer; check your organization's
+data-handling requirements before enabling it.
+
+### `wren ai auth`
+
+The OpenAI API requires an API key. Enter it without putting the secret in
+shell history:
+
+```bash
+wren ai auth login       # writes OPENAI_API_KEY to ~/.wren/.env
+wren ai auth status
+wren ai auth logout
+```
+
+This API-key login is separate from `codex login`; switching to `codex` keeps
+using the Codex CLI's existing authentication.
 
 ## `wren genbi` — Build & Deploy GenBI Apps
 

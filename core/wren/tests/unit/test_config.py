@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from wren.config import WrenConfig, load_config
+from wren.config import AIConfig, WrenConfig, load_config, save_ai_config
 from wren.model.error import WrenError
 
 pytestmark = pytest.mark.unit
@@ -82,6 +82,48 @@ def test_load_config_empty_object(tmp_path):
     (tmp_path / "config.json").write_text(json.dumps({}))
     config = load_config(tmp_path)
     assert config == WrenConfig()
+
+
+def test_load_config_ai_settings(tmp_path):
+    (tmp_path / "config.json").write_text(
+        json.dumps(
+            {
+                "strict_mode": True,
+                "ai": {
+                    "provider": "OPENAI",
+                    "model": "gpt-4o-mini",
+                    "base_url": "https://proxy.example/v1/",
+                },
+            }
+        )
+    )
+    config = load_config(tmp_path)
+    assert config.ai == AIConfig(
+        provider="openai",
+        model="gpt-4o-mini",
+        base_url="https://proxy.example/v1",
+    )
+
+
+def test_save_ai_config_preserves_existing_settings(tmp_path):
+    (tmp_path / "config.json").write_text(
+        json.dumps({"strict_mode": True, "denied_functions": ["secret"]})
+    )
+    save_ai_config(
+        tmp_path,
+        AIConfig(provider="openai", model="gpt-4o-mini"),
+    )
+    raw = json.loads((tmp_path / "config.json").read_text())
+    assert raw["strict_mode"] is True
+    assert raw["denied_functions"] == ["secret"]
+    assert raw["ai"]["provider"] == "openai"
+
+
+@pytest.mark.parametrize("value", ["bad", 1, [], {}])
+def test_load_config_invalid_ai_provider_rejected(tmp_path, value):
+    (tmp_path / "config.json").write_text(json.dumps({"ai": {"provider": value}}))
+    with pytest.raises(WrenError):
+        load_config(tmp_path)
 
 
 def test_load_config_strict_mode_string_rejected(tmp_path):

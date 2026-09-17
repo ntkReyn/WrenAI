@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
+import wren.ai
+import wren.ask_cli
 from wren import ask as ask_mod
 from wren.cli import app
 
@@ -83,3 +85,69 @@ def test_user_prompt_with_template_placeholder_substring_is_safe():
     out = ask_mod.render("direct", prompt)
     # the bundled placeholder is gone and the prompt is present (verbatim)
     assert prompt in out
+
+
+def test_openai_provider_calls_selected_model(monkeypatch, tmp_path):
+    monkeypatch.setattr(wren.ask_cli, "_WREN_HOME", tmp_path)
+    monkeypatch.setattr(wren.ai, "get_openai_api_key", lambda: "sk-test")
+    captured = {}
+
+    def fake_agent(prompt, **kwargs):
+        captured["prompt"] = prompt
+        captured["kwargs"] = kwargs
+        return "API answer"
+
+    monkeypatch.setattr(wren.ai, "run_openai_agent", fake_agent)
+    result = runner.invoke(
+        app,
+        [
+            "ask",
+            "show me revenue",
+            "--direct",
+            "--provider",
+            "openai",
+            "--model",
+            "gpt-4o-mini",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "API answer"
+    assert captured["kwargs"]["model"] == "gpt-4o-mini"
+    assert captured["kwargs"]["api_key"] == "sk-test"
+
+
+def test_wren_runtime_exposes_context_and_memory_store(tmp_path):
+    project = tmp_path
+    (project / "wren_project.yml").write_text(
+        "schema_version: 2\nname: test\ndata_source: duckdb\n"
+    )
+    model_dir = project / "models" / "orders"
+    model_dir.mkdir(parents=True)
+    (model_dir / "metadata.yml").write_text(
+        "name: orders\n"
+        "table_reference:\n  table: orders\n"
+        "columns:\n  - name: id\n    type: INTEGER\n"
+    )
+
+    tools, execute, engine = wren.ask_cli._build_wren_runtime(project)
+    names = {
+        spec["function"]["name"]
+        for spec in tools
+    }
+    assert names == {
+        "wren_context_show",
+        "wren_memory_recall",
+        "wren_memory_fetch",
+        "wren_dry_plan",
+        "wren_query",
+        "wren_memory_store",
+    }
+    assert engine == [None]
+    context = execute("wren_context_show", {})
+    assert context["manifest"]["models"][0]["name"] == "orders"
+    stored = execute(
+        "wren_memory_store",
+        {"question": "How many orders?", "sql": "SELECT COUNT(*) FROM orders"},
+    )
+    assert stored["stored"] is True
+    assert (project / stored["path"]).exists()
